@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useCallback } from 'react';
-import { Download, RefreshCw, Wand2, Palette, Type, Settings2, Layout, Grid, ArrowRight, Sun, Moon, FileCode } from 'lucide-react';
+import { Download, RefreshCw, Wand2, Palette, Type, Settings2, Layout, Grid, ArrowRight, Sun, Moon, FileCode, Save, Upload } from 'lucide-react';
 import { DEFAULT_LOGO_CONFIG, DEFAULT_LIGHT_COLORS, FONT_OPTIONS } from './constants';
 import { LogoConfig, LogoColorConfig, DownloadFormat } from './types';
 import { LogoRenderer } from './components/LogoRenderer';
@@ -19,6 +19,7 @@ export default function App() {
   const darkSvgRef = useRef<SVGSVGElement>(null);
   const lightSvgRef = useRef<SVGSVGElement>(null);
   const variationsRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const lightConfig: LogoConfig = {
     ...config,
@@ -81,6 +82,42 @@ export default function App() {
     }
   }, [config, lightConfig]);
 
+  const handleExportConfig = () => {
+    const data = {
+      dark: config,
+      light: lightColors
+    };
+    const jsonString = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `dimo_v_config_${Date.now()}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImportConfig = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const json = JSON.parse(event.target?.result as string);
+        if (json.dark) setConfig(json.dark);
+        if (json.light) setLightColors(json.light);
+      } catch (err) {
+        alert("Invalid configuration file");
+      }
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
+  };
+
   const handleAIGenerate = async (mode: 'single' | 'variations') => {
     const effectivePrompt = prompt.trim() || (mode === 'variations' ? "Generate 10 distinct creative variations." : "");
     if (!effectivePrompt) return;
@@ -116,16 +153,22 @@ export default function App() {
 
   const currentColorConfig = activeColorTab === 'dark' ? config : lightColors;
 
-  // Helper for sliders
+  // Helper for sliders with numeric input
   const SliderControl = ({ label, value, min, max, step = 1, onChange, accent = "accent-blue-500" }: any) => (
     <div>
-      <div className="flex justify-between mb-1">
+      <div className="flex justify-between items-center mb-1">
         <label className="text-[10px] text-gray-500 uppercase font-bold">{label}</label>
-        <span className="text-[10px] text-gray-500 font-mono">{value}</span>
+        <input 
+          type="number"
+          value={value}
+          step={step}
+          onChange={onChange}
+          className="w-14 bg-gray-900 border border-gray-700 text-right text-[10px] px-1 py-0.5 rounded text-gray-300 focus:ring-1 focus:ring-purple-500 outline-none"
+        />
       </div>
       <input 
         type="range" min={min} max={max} step={step} value={value} onChange={onChange}
-        className={`w-full ${accent}`}
+        className={`w-full ${accent} cursor-pointer h-1.5 bg-gray-700 rounded-lg appearance-none`}
       />
     </div>
   );
@@ -137,6 +180,21 @@ export default function App() {
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-red-600 rounded-md flex items-center justify-center font-bold italic text-white">D</div>
             <h1 className="text-xl font-bold tracking-wide text-white">LogoForge <span className="text-red-500 font-normal text-sm ml-2">AI Edition</span></h1>
+          </div>
+          <div className="flex gap-2">
+             <input 
+                type="file" 
+                ref={fileInputRef}
+                onChange={handleImportConfig}
+                accept=".json"
+                className="hidden"
+             />
+             <button onClick={() => fileInputRef.current?.click()} className="text-xs flex items-center gap-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 px-3 py-1.5 rounded text-gray-300 transition-colors">
+               <Upload size={14} /> Load
+             </button>
+             <button onClick={handleExportConfig} className="text-xs flex items-center gap-1 bg-gray-800 hover:bg-gray-700 border border-gray-700 px-3 py-1.5 rounded text-gray-300 transition-colors">
+               <Save size={14} /> Save
+             </button>
           </div>
         </div>
       </header>
