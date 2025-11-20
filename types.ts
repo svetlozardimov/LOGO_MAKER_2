@@ -12,9 +12,28 @@ export interface LogoConfig extends LogoColorConfig {
   textSecondary: string;
   textTagline: string;
   fontFamily: string;
-  letterSpacingMain: number;
+
+  // First Letter (e.g. "D")
+  fontSizeMainFirst: number;
+  skewMainFirst: number;
+  xOffsetMainFirst: number;
+
+  // Rest of Name (e.g. "imo")
+  fontSizeMainRest: number;
+  skewMainRest: number;
+  xOffsetMainRest: number;
+  letterSpacingMainRest: number;
+
+  // Symbol (e.g. "V")
+  fontSizeSecondary: number;
+  skewSecondary: number;
+  xOffsetSecondary: number;
+
+  // Tagline
+  fontSizeTagline: number;
+  taglineOffset: number;
   letterSpacingTagline: number;
-  gapSize: number;
+  skewTagline: number;
 }
 
 export enum DownloadFormat {

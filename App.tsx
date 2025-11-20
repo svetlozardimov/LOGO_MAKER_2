@@ -20,7 +20,6 @@ export default function App() {
   const lightSvgRef = useRef<SVGSVGElement>(null);
   const variationsRef = useRef<HTMLDivElement>(null);
 
-  // Combine structural config with light colors for the second preview
   const lightConfig: LogoConfig = {
     ...config,
     ...lightColors
@@ -46,7 +45,6 @@ export default function App() {
       document.body.removeChild(link);
     } else if (format === DownloadFormat.PNG) {
       const canvas = document.createElement('canvas');
-      // High resolution for PNG
       const scale = 4;
       const svgRect = svgElement.getBoundingClientRect();
       canvas.width = svgRect.width * scale;
@@ -69,15 +67,12 @@ export default function App() {
         link.click();
         document.body.removeChild(link);
       };
-      
-      // Handle special characters in SVG data URI
       img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
     }
   }, [config, lightConfig]);
 
   const handleAIGenerate = async (mode: 'single' | 'variations') => {
-    const effectivePrompt = prompt.trim() || (mode === 'variations' ? "Generate 10 distinct creative variations of the current logo style." : "");
-
+    const effectivePrompt = prompt.trim() || (mode === 'variations' ? "Generate 10 distinct creative variations." : "");
     if (!effectivePrompt) return;
     
     setIsGenerating(true);
@@ -89,30 +84,16 @@ export default function App() {
       } else {
         const newVariations = await generateLogoVariations(config, effectivePrompt, 10);
         setVariations(newVariations);
-        
         setTimeout(() => {
           variationsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
       }
     } catch (err) {
       console.error(err);
-      setError("Could not generate logo. Please check your API key or try a different prompt.");
+      setError("Could not generate logo. Try again.");
     } finally {
       setIsGenerating(false);
     }
-  };
-
-  const handleReset = () => {
-    setConfig(DEFAULT_LOGO_CONFIG);
-    setLightColors(DEFAULT_LIGHT_COLORS);
-    setVariations([]);
-    setPrompt('');
-    setError(null);
-  };
-
-  const applyVariation = (varConfig: LogoConfig) => {
-    setConfig(varConfig);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const updateColor = (key: keyof LogoColorConfig, value: string) => {
@@ -125,6 +106,20 @@ export default function App() {
 
   const currentColorConfig = activeColorTab === 'dark' ? config : lightColors;
 
+  // Helper for sliders
+  const SliderControl = ({ label, value, min, max, step = 1, onChange, accent = "accent-blue-500" }: any) => (
+    <div>
+      <div className="flex justify-between mb-1">
+        <label className="text-[10px] text-gray-500 uppercase font-bold">{label}</label>
+        <span className="text-[10px] text-gray-500 font-mono">{value}</span>
+      </div>
+      <input 
+        type="range" min={min} max={max} step={step} value={value} onChange={onChange}
+        className={`w-full ${accent}`}
+      />
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 font-sans">
       <header className="border-b border-gray-800 bg-gray-950/50 backdrop-blur-md sticky top-0 z-10">
@@ -133,9 +128,6 @@ export default function App() {
             <div className="w-8 h-8 bg-red-600 rounded-md flex items-center justify-center font-bold italic text-white">D</div>
             <h1 className="text-xl font-bold tracking-wide text-white">LogoForge <span className="text-red-500 font-normal text-sm ml-2">AI Edition</span></h1>
           </div>
-          <div className="flex items-center space-x-4 text-sm text-gray-400">
-             <span>Dimo V Construction Replicator</span>
-          </div>
         </div>
       </header>
 
@@ -143,98 +135,51 @@ export default function App() {
         
         {/* Preview Section */}
         <section className="lg:col-span-8 space-y-8">
-          
-          {/* Dual Preview Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            {/* Dark Variant (Main) */}
+            {/* Dark */}
             <div className="space-y-4">
               <div className="bg-gray-800/50 border border-gray-700 rounded-2xl p-4 shadow-2xl flex flex-col items-center justify-center relative overflow-hidden min-h-[300px]">
                 <div className="absolute top-2 left-2 bg-gray-900/80 text-gray-300 text-xs px-2 py-1 rounded flex items-center gap-1 border border-gray-700">
-                   <Moon size={12} /> Dark Variant
+                   <Moon size={12} /> Dark
                 </div>
                 <div className="relative z-10 w-full aspect-[2/1] shadow-xl rounded-lg overflow-hidden border border-gray-700">
-                   <LogoRenderer 
-                     ref={darkSvgRef} 
-                     config={config} 
-                     className="w-full h-full"
-                   />
+                   <LogoRenderer ref={darkSvgRef} config={config} className="w-full h-full" />
                 </div>
               </div>
               <div className="flex gap-2 justify-center">
-                <button 
-                  onClick={() => handleDownload(DownloadFormat.PNG, 'dark')}
-                  className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 py-2 rounded-lg text-xs font-medium transition-colors border border-gray-700 flex items-center justify-center gap-2"
-                >
-                  <Download size={14} /> PNG
-                </button>
-                <button 
-                  onClick={() => handleDownload(DownloadFormat.SVG, 'dark')}
-                  className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 py-2 rounded-lg text-xs font-medium transition-colors border border-gray-700 flex items-center justify-center gap-2"
-                >
-                  <Download size={14} /> SVG
-                </button>
+                <button onClick={() => handleDownload(DownloadFormat.PNG, 'dark')} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 py-2 rounded-lg text-xs font-medium border border-gray-700 flex items-center justify-center gap-2"><Download size={14} /> PNG</button>
+                <button onClick={() => handleDownload(DownloadFormat.SVG, 'dark')} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 py-2 rounded-lg text-xs font-medium border border-gray-700 flex items-center justify-center gap-2"><Download size={14} /> SVG</button>
               </div>
             </div>
 
-            {/* Light Variant (Secondary) */}
+            {/* Light */}
             <div className="space-y-4">
               <div className="bg-gray-200 border border-gray-300 rounded-2xl p-4 shadow-2xl flex flex-col items-center justify-center relative overflow-hidden min-h-[300px]">
                 <div className="absolute top-2 left-2 bg-white/80 text-gray-600 text-xs px-2 py-1 rounded flex items-center gap-1 border border-gray-300 shadow-sm">
-                   <Sun size={12} /> Light Variant
+                   <Sun size={12} /> Light
                 </div>
                  <div className="relative z-10 w-full aspect-[2/1] shadow-xl rounded-lg overflow-hidden border border-gray-300">
-                   <LogoRenderer 
-                     ref={lightSvgRef} 
-                     config={lightConfig} 
-                     className="w-full h-full"
-                   />
+                   <LogoRenderer ref={lightSvgRef} config={lightConfig} className="w-full h-full" />
                 </div>
               </div>
                <div className="flex gap-2 justify-center">
-                <button 
-                  onClick={() => handleDownload(DownloadFormat.PNG, 'light')}
-                  className="flex-1 bg-gray-100 hover:bg-white text-gray-800 py-2 rounded-lg text-xs font-medium transition-colors border border-gray-300 flex items-center justify-center gap-2"
-                >
-                  <Download size={14} /> PNG
-                </button>
-                <button 
-                  onClick={() => handleDownload(DownloadFormat.SVG, 'light')}
-                  className="flex-1 bg-gray-100 hover:bg-white text-gray-800 py-2 rounded-lg text-xs font-medium transition-colors border border-gray-300 flex items-center justify-center gap-2"
-                >
-                  <Download size={14} /> SVG
-                </button>
+                <button onClick={() => handleDownload(DownloadFormat.PNG, 'light')} className="flex-1 bg-gray-100 hover:bg-white text-gray-800 py-2 rounded-lg text-xs font-medium border border-gray-300 flex items-center justify-center gap-2"><Download size={14} /> PNG</button>
+                <button onClick={() => handleDownload(DownloadFormat.SVG, 'light')} className="flex-1 bg-gray-100 hover:bg-white text-gray-800 py-2 rounded-lg text-xs font-medium border border-gray-300 flex items-center justify-center gap-2"><Download size={14} /> SVG</button>
               </div>
             </div>
-
           </div>
 
-          {/* Variations Gallery */}
+          {/* Variations */}
           {variations.length > 0 && (
             <div ref={variationsRef} className="bg-gray-800/30 border border-gray-700 rounded-2xl p-6 scroll-mt-24">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold flex items-center gap-2 text-gray-200">
-                  <Grid size={20} className="text-purple-400" />
-                  Generated Variations
-                </h3>
-                <span className="text-xs text-gray-500">Click to apply to Main</span>
+                <h3 className="text-lg font-bold flex items-center gap-2 text-gray-200"><Grid size={20} className="text-purple-400" /> Generated Variations</h3>
               </div>
-              
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {variations.map((v, i) => (
-                  <div 
-                    key={i}
-                    onClick={() => applyVariation(v)}
-                    className="group relative aspect-[2/1] bg-gray-900 rounded-lg overflow-hidden border border-gray-700 hover:border-purple-500 cursor-pointer transition-all hover:shadow-lg hover:shadow-purple-500/10"
-                  >
-                    <div className="absolute inset-0 p-2">
-                      <LogoRenderer config={v} width={200} height={100} className="w-full h-full" />
-                    </div>
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                      <span className="text-white font-semibold text-xs flex items-center gap-1">
-                        Apply <ArrowRight size={12} />
-                      </span>
-                    </div>
+                  <div key={i} onClick={() => { setConfig(v); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="group relative aspect-[2/1] bg-gray-900 rounded-lg overflow-hidden border border-gray-700 hover:border-purple-500 cursor-pointer transition-all hover:shadow-lg hover:shadow-purple-500/10">
+                    <div className="absolute inset-0 p-2"><LogoRenderer config={v} width={200} height={100} className="w-full h-full" /></div>
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"><span className="text-white font-semibold text-xs flex items-center gap-1">Apply <ArrowRight size={12} /></span></div>
                   </div>
                 ))}
               </div>
@@ -242,273 +187,108 @@ export default function App() {
           )}
         </section>
 
-        {/* Controls Section */}
+        {/* Controls */}
         <aside className="lg:col-span-4 space-y-6">
-          
-          {/* AI Controller */}
+          {/* AI */}
           <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 shadow-lg">
-            <div className="flex items-center space-x-2 mb-4 text-purple-400">
-              <Wand2 size={20} />
-              <h2 className="font-bold text-lg uppercase tracking-wider">AI Modifier</h2>
+            <div className="flex items-center space-x-2 mb-4 text-purple-400"><Wand2 size={20} /><h2 className="font-bold text-lg uppercase tracking-wider">AI Modifier</h2></div>
+            <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} placeholder="Describe changes..." className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:ring-2 focus:ring-purple-500 transition-all resize-none h-24 text-sm mb-3" />
+            <div className="grid grid-cols-2 gap-2">
+              <button onClick={() => handleAIGenerate('single')} disabled={isGenerating} className="bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-2">{isGenerating ? <RefreshCw className="animate-spin" size={14}/> : <Wand2 size={14}/>} Modify</button>
+              <button onClick={() => handleAIGenerate('variations')} disabled={isGenerating} className="bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-2">{isGenerating ? <RefreshCw className="animate-spin" size={14}/> : <Grid size={14}/>} Variations</button>
             </div>
-            <div className="space-y-3">
-              <textarea
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                placeholder="e.g. 'Make it look more futuristic' (affects Main)"
-                className="w-full bg-gray-900 border border-gray-700 rounded-xl p-3 text-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none h-24 text-sm"
-              />
-              
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  onClick={() => handleAIGenerate('single')}
-                  disabled={isGenerating}
-                  className={`py-3 rounded-xl font-semibold transition-all flex items-center justify-center space-x-2 text-sm ${
-                    isGenerating 
-                      ? 'bg-gray-700 cursor-not-allowed text-gray-400'
-                      : 'bg-gray-700 hover:bg-gray-600 text-white border border-gray-600'
-                  }`}
-                >
-                  {isGenerating ? (
-                    <RefreshCw className="animate-spin" size={16} />
-                  ) : (
-                    <Wand2 size={16} />
-                  )}
-                  <span>Modify Main</span>
-                </button>
-
-                <button
-                  onClick={() => handleAIGenerate('variations')}
-                  disabled={isGenerating}
-                  className={`py-3 rounded-xl font-semibold transition-all flex items-center justify-center space-x-2 text-sm ${
-                    isGenerating 
-                      ? 'bg-gray-700 cursor-not-allowed text-gray-400'
-                      : 'bg-purple-600 hover:bg-purple-700 text-white shadow-lg hover:shadow-purple-600/20 active:scale-95'
-                  }`}
-                >
-                  {isGenerating ? (
-                    <RefreshCw className="animate-spin" size={16} />
-                  ) : (
-                    <Grid size={16} />
-                  )}
-                  <span>10 Variations</span>
-                </button>
-              </div>
-
-              {error && (
-                <p className="text-red-400 text-xs mt-2">{error}</p>
-              )}
-            </div>
+            {error && <p className="text-red-400 text-xs mt-2">{error}</p>}
           </div>
 
           {/* Manual Controls */}
-          <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 shadow-lg space-y-6">
-            <div className="flex items-center justify-between text-gray-400 mb-2">
-              <div className="flex items-center space-x-2">
-                <Settings2 size={20} />
-                <h2 className="font-bold text-lg uppercase tracking-wider">Manual Edit</h2>
+          <div className="bg-gray-800 border border-gray-700 rounded-2xl p-4 shadow-lg space-y-6 overflow-y-auto max-h-[800px]">
+             {/* General Text & Font */}
+            <div className="space-y-3">
+              <div className="flex items-center space-x-2 text-gray-400 text-xs uppercase font-bold tracking-wider mb-1"><Type size={14} /><span>Base Text & Font</span></div>
+              <div className="grid grid-cols-2 gap-2">
+                <input type="text" value={config.textMain} onChange={(e) => setConfig({...config, textMain: e.target.value})} className="bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white" placeholder="Dimo" />
+                <input type="text" value={config.textSecondary} onChange={(e) => setConfig({...config, textSecondary: e.target.value})} className="bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white" placeholder="V" />
               </div>
-              <button onClick={handleReset} className="text-xs hover:text-white underline">Reset Default</button>
+              <input type="text" value={config.textTagline} onChange={(e) => setConfig({...config, textTagline: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white" placeholder="TAGLINE" />
+              <select value={config.fontFamily} onChange={(e) => setConfig({...config, fontFamily: e.target.value})} className="w-full bg-gray-900 border border-gray-700 rounded p-2 text-xs text-white">
+                {FONT_OPTIONS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
+              </select>
             </div>
 
-            {/* Content - Shared */}
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2 text-gray-400 text-xs uppercase font-bold tracking-wider mb-2">
-                <Type size={14} />
-                <span>Content (Shared)</span>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                 <div>
-                    <label className="block text-xs text-gray-500 mb-1">Main Name</label>
-                    <input 
-                      type="text" 
-                      value={config.textMain}
-                      onChange={(e) => setConfig({...config, textMain: e.target.value})}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
-                    />
-                 </div>
-                 <div>
-                    <label className="block text-xs text-gray-500 mb-1">Symbol</label>
-                    <input 
-                      type="text" 
-                      value={config.textSecondary}
-                      onChange={(e) => setConfig({...config, textSecondary: e.target.value})}
-                      className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
-                    />
-                 </div>
-              </div>
-              <div>
-                  <label className="block text-xs text-gray-500 mb-1">Tagline</label>
-                  <input 
-                    type="text" 
-                    value={config.textTagline}
-                    onChange={(e) => setConfig({...config, textTagline: e.target.value})}
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors"
-                  />
-               </div>
-            </div>
+            <div className="border-t border-gray-700"></div>
 
-            <div className="border-t border-gray-700 pt-4"></div>
-
-            {/* Typography & Spacing - Shared */}
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2 text-gray-400 text-xs uppercase font-bold tracking-wider mb-2">
-                <Layout size={14} />
-                <span>Typography (Shared)</span>
-              </div>
-
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Font Family</label>
-                <select 
-                  value={config.fontFamily}
-                  onChange={(e) => setConfig({...config, fontFamily: e.target.value})}
-                  className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-red-500 focus:ring-1 focus:ring-red-500 text-sm"
-                >
-                  {FONT_OPTIONS.map((font) => (
-                    <option key={font.value} value={font.value}>{font.label}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Main Letter Spacing</label>
-                <input 
-                  type="range" 
-                  min="-0.1" 
-                  max="0.5" 
-                  step="0.01"
-                  value={config.letterSpacingMain}
-                  onChange={(e) => setConfig({...config, letterSpacingMain: parseFloat(e.target.value)})}
-                  className="w-full accent-red-500"
-                />
-              </div>
-
-               <div>
-                <label className="block text-xs text-gray-500 mb-1">Gap Size (Dimo - V)</label>
-                <input 
-                  type="range" 
-                  min="-50" 
-                  max="100" 
-                  step="1"
-                  value={config.gapSize}
-                  onChange={(e) => setConfig({...config, gapSize: parseFloat(e.target.value)})}
-                  className="w-full accent-red-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs text-gray-500 mb-1">Tagline Spacing</label>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="1" 
-                  step="0.05"
-                  value={config.letterSpacingTagline}
-                  onChange={(e) => setConfig({...config, letterSpacingTagline: parseFloat(e.target.value)})}
-                  className="w-full accent-red-500"
-                />
+            {/* First Letter Controls */}
+            <div className="space-y-2">
+              <h4 className="text-xs text-red-400 font-bold uppercase">First Letter ('{config.textMain.charAt(0)}')</h4>
+              <div className="grid grid-cols-2 gap-3 bg-gray-900/50 p-3 rounded-lg">
+                <div className="col-span-2">
+                   <SliderControl label="X Position" min={-150} max={150} value={config.xOffsetMainFirst} onChange={(e: any) => setConfig({...config, xOffsetMainFirst: parseFloat(e.target.value)})} accent="accent-red-500" />
+                </div>
+                <SliderControl label="Size" min={20} max={150} value={config.fontSizeMainFirst} onChange={(e: any) => setConfig({...config, fontSizeMainFirst: parseFloat(e.target.value)})} accent="accent-red-500" />
+                <SliderControl label="Slant (Skew)" min={-45} max={45} value={config.skewMainFirst} onChange={(e: any) => setConfig({...config, skewMainFirst: parseFloat(e.target.value)})} accent="accent-red-500" />
               </div>
             </div>
 
-            <div className="border-t border-gray-700 pt-4"></div>
-
-            {/* Colors - Separate */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between mb-2">
-                 <div className="flex items-center space-x-2 text-gray-400 text-xs uppercase font-bold tracking-wider">
-                  <Palette size={14} />
-                  <span>Colors</span>
+            {/* Rest of Name Controls */}
+            <div className="space-y-2">
+              <h4 className="text-xs text-blue-400 font-bold uppercase">Rest of Name ('{config.textMain.slice(1)}')</h4>
+              <div className="grid grid-cols-2 gap-3 bg-gray-900/50 p-3 rounded-lg">
+                <div className="col-span-2">
+                  <SliderControl label="X Position" min={-150} max={150} value={config.xOffsetMainRest} onChange={(e: any) => setConfig({...config, xOffsetMainRest: parseFloat(e.target.value)})} accent="accent-blue-500" />
                 </div>
-              </div>
-              
-              {/* Color Tabs */}
-              <div className="flex p-1 bg-gray-900 rounded-lg mb-4">
-                <button
-                  onClick={() => setActiveColorTab('dark')}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-md flex items-center justify-center gap-2 transition-all ${
-                    activeColorTab === 'dark' 
-                      ? 'bg-gray-700 text-white shadow-sm' 
-                      : 'text-gray-500 hover:text-gray-300'
-                  }`}
-                >
-                  <Moon size={12} /> Main (Dark)
-                </button>
-                <button
-                  onClick={() => setActiveColorTab('light')}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-md flex items-center justify-center gap-2 transition-all ${
-                    activeColorTab === 'light' 
-                      ? 'bg-gray-200 text-gray-900 shadow-sm' 
-                      : 'text-gray-500 hover:text-gray-300'
-                  }`}
-                >
-                  <Sun size={12} /> Variant (Light)
-                </button>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">First Letter</label>
-                  <div className="flex items-center space-x-2">
-                    <input 
-                      type="color" 
-                      value={currentColorConfig.colorMain}
-                      onChange={(e) => updateColor('colorMain', e.target.value)}
-                      className="h-8 w-8 bg-transparent cursor-pointer border-none"
-                    />
-                    <span className="text-xs font-mono text-gray-400">{currentColorConfig.colorMain}</span>
-                  </div>
-                </div>
-                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Rest of Name</label>
-                  <div className="flex items-center space-x-2">
-                    <input 
-                      type="color" 
-                      value={currentColorConfig.colorMainRest}
-                      onChange={(e) => updateColor('colorMainRest', e.target.value)}
-                      className="h-8 w-8 bg-transparent cursor-pointer border-none"
-                    />
-                    <span className="text-xs font-mono text-gray-400">{currentColorConfig.colorMainRest}</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Secondary (V)</label>
-                  <div className="flex items-center space-x-2">
-                    <input 
-                      type="color" 
-                      value={currentColorConfig.colorSecondary}
-                      onChange={(e) => updateColor('colorSecondary', e.target.value)}
-                      className="h-8 w-8 bg-transparent cursor-pointer border-none"
-                    />
-                    <span className="text-xs font-mono text-gray-400">{currentColorConfig.colorSecondary}</span>
-                  </div>
-                </div>
-                 <div>
-                  <label className="block text-xs text-gray-500 mb-1">Tagline</label>
-                  <div className="flex items-center space-x-2">
-                    <input 
-                      type="color" 
-                      value={currentColorConfig.colorTagline}
-                      onChange={(e) => updateColor('colorTagline', e.target.value)}
-                      className="h-8 w-8 bg-transparent cursor-pointer border-none"
-                    />
-                    <span className="text-xs font-mono text-gray-400">{currentColorConfig.colorTagline}</span>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs text-gray-500 mb-1">Background</label>
-                  <div className="flex items-center space-x-2">
-                    <input 
-                      type="color" 
-                      value={currentColorConfig.bgColor}
-                      onChange={(e) => updateColor('bgColor', e.target.value)}
-                      className="h-8 w-8 bg-transparent cursor-pointer border-none"
-                    />
-                    <span className="text-xs font-mono text-gray-400">{currentColorConfig.bgColor}</span>
-                  </div>
+                <SliderControl label="Size" min={20} max={150} value={config.fontSizeMainRest} onChange={(e: any) => setConfig({...config, fontSizeMainRest: parseFloat(e.target.value)})} accent="accent-blue-500" />
+                <SliderControl label="Slant (Skew)" min={-45} max={45} value={config.skewMainRest} onChange={(e: any) => setConfig({...config, skewMainRest: parseFloat(e.target.value)})} accent="accent-blue-500" />
+                <div className="col-span-2">
+                  <SliderControl label="Letter Spacing" min={-0.1} max={1} step={0.01} value={config.letterSpacingMainRest} onChange={(e: any) => setConfig({...config, letterSpacingMainRest: parseFloat(e.target.value)})} accent="accent-blue-500" />
                 </div>
               </div>
             </div>
+
+            {/* Symbol Controls */}
+            <div className="space-y-2">
+              <h4 className="text-xs text-green-400 font-bold uppercase">Symbol ('{config.textSecondary}')</h4>
+              <div className="grid grid-cols-2 gap-3 bg-gray-900/50 p-3 rounded-lg">
+                <div className="col-span-2">
+                   <SliderControl label="X Position" min={-150} max={150} value={config.xOffsetSecondary} onChange={(e: any) => setConfig({...config, xOffsetSecondary: parseFloat(e.target.value)})} accent="accent-green-500" />
+                </div>
+                <SliderControl label="Size" min={20} max={150} value={config.fontSizeSecondary} onChange={(e: any) => setConfig({...config, fontSizeSecondary: parseFloat(e.target.value)})} accent="accent-green-500" />
+                <SliderControl label="Slant (Skew)" min={-45} max={45} value={config.skewSecondary} onChange={(e: any) => setConfig({...config, skewSecondary: parseFloat(e.target.value)})} accent="accent-green-500" />
+              </div>
+            </div>
+
+            {/* Tagline Controls */}
+            <div className="space-y-2 border-t border-gray-700 pt-2">
+              <h4 className="text-xs text-gray-400 font-bold uppercase">Tagline</h4>
+              <div className="grid grid-cols-2 gap-3 bg-gray-900/50 p-3 rounded-lg">
+                <div className="col-span-2">
+                   <SliderControl label="Vertical Position" min={20} max={100} value={config.taglineOffset} onChange={(e: any) => setConfig({...config, taglineOffset: parseFloat(e.target.value)})} accent="accent-gray-500" />
+                </div>
+                 <SliderControl label="Size" min={10} max={50} value={config.fontSizeTagline} onChange={(e: any) => setConfig({...config, fontSizeTagline: parseFloat(e.target.value)})} accent="accent-gray-500" />
+                 <SliderControl label="Spacing" min={0} max={1} step={0.05} value={config.letterSpacingTagline} onChange={(e: any) => setConfig({...config, letterSpacingTagline: parseFloat(e.target.value)})} accent="accent-gray-500" />
+              </div>
+            </div>
+
+            {/* Colors */}
+            <div className="border-t border-gray-700 pt-4">
+              <div className="flex p-1 bg-gray-900 rounded mb-3">
+                <button onClick={() => setActiveColorTab('dark')} className={`flex-1 py-1 text-[10px] font-bold rounded ${activeColorTab === 'dark' ? 'bg-gray-700 text-white' : 'text-gray-500'}`}>MAIN (DARK)</button>
+                <button onClick={() => setActiveColorTab('light')} className={`flex-1 py-1 text-[10px] font-bold rounded ${activeColorTab === 'light' ? 'bg-gray-200 text-black' : 'text-gray-500'}`}>VARIANT (LIGHT)</button>
+              </div>
+              <div className="grid grid-cols-5 gap-2">
+                 {/* Color Inputs simplified */}
+                 {[
+                   { k: 'colorMain', l: 'First' }, { k: 'colorMainRest', l: 'Rest' }, 
+                   { k: 'colorSecondary', l: 'Symbol' }, { k: 'colorTagline', l: 'Tag' }, 
+                   { k: 'bgColor', l: 'BG' }
+                 ].map(({k, l}) => (
+                   <div key={k} className="text-center">
+                     <input type="color" value={(currentColorConfig as any)[k]} onChange={(e) => updateColor(k as keyof LogoColorConfig, e.target.value)} className="w-8 h-8 rounded cursor-pointer border-none bg-transparent" />
+                     <div className="text-[8px] text-gray-500 uppercase">{l}</div>
+                   </div>
+                 ))}
+              </div>
+            </div>
+
           </div>
         </aside>
       </main>

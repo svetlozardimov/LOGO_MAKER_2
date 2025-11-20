@@ -11,16 +11,35 @@ export const DEFAULT_LOGO_CONFIG: LogoConfig = {
   colorTagline: "#FFFFFF", // White for Tagline
   bgColor: "#000000",
   fontFamily: "Arial, Helvetica, sans-serif",
-  letterSpacingMain: 0,
-  letterSpacingTagline: 0.35, // Wide spacing for tagline
-  gapSize: 20, // Space between Dimo and V
+  
+  // First Letter (D)
+  fontSizeMainFirst: 85,
+  skewMainFirst: 0,
+  xOffsetMainFirst: -65, // Moved left
+
+  // Rest of Name (imo)
+  fontSizeMainRest: 85,
+  skewMainRest: 0,
+  xOffsetMainRest: 10, // Center-ish
+  letterSpacingMainRest: 0,
+
+  // Symbol (V)
+  fontSizeSecondary: 85,
+  skewSecondary: -15, // Negative skews right in SVG usually, depending on coords. Standard skewX(-15) leans right.
+  xOffsetSecondary: 85, // Moved right
+
+  // Tagline
+  fontSizeTagline: 20,
+  taglineOffset: 55,
+  letterSpacingTagline: 0.35,
+  skewTagline: 0,
 };
 
 export const DEFAULT_LIGHT_COLORS: LogoColorConfig = {
   colorMain: "#DC2626",
-  colorMainRest: "#000000", // Black for 'imo' on white bg
+  colorMainRest: "#000000",
   colorSecondary: "#DC2626",
-  colorTagline: "#000000", // Black for Tagline on white bg
+  colorTagline: "#000000",
   bgColor: "#FFFFFF",
 };
 

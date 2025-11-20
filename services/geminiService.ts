@@ -15,23 +15,36 @@ const configSchema: Schema = {
     colorTagline: { type: Type.STRING },
     bgColor: { type: Type.STRING },
     fontFamily: { type: Type.STRING },
-    letterSpacingMain: { type: Type.NUMBER },
+    
+    // First Letter
+    fontSizeMainFirst: { type: Type.NUMBER },
+    skewMainFirst: { type: Type.NUMBER },
+    xOffsetMainFirst: { type: Type.NUMBER },
+    
+    // Rest of Name
+    fontSizeMainRest: { type: Type.NUMBER },
+    skewMainRest: { type: Type.NUMBER },
+    xOffsetMainRest: { type: Type.NUMBER },
+    letterSpacingMainRest: { type: Type.NUMBER },
+    
+    // Symbol
+    fontSizeSecondary: { type: Type.NUMBER },
+    skewSecondary: { type: Type.NUMBER },
+    xOffsetSecondary: { type: Type.NUMBER },
+
+    // Tagline
+    fontSizeTagline: { type: Type.NUMBER },
+    taglineOffset: { type: Type.NUMBER },
     letterSpacingTagline: { type: Type.NUMBER },
-    gapSize: { type: Type.NUMBER },
+    skewTagline: { type: Type.NUMBER },
   },
   required: [
-    "textMain",
-    "textSecondary",
-    "textTagline",
-    "colorMain",
-    "colorMainRest",
-    "colorSecondary",
-    "colorTagline",
-    "bgColor",
-    "fontFamily",
-    "letterSpacingMain",
-    "letterSpacingTagline",
-    "gapSize",
+    "textMain", "textSecondary", "textTagline", "colorMain", "colorMainRest",
+    "colorSecondary", "colorTagline", "bgColor", "fontFamily",
+    "fontSizeMainFirst", "skewMainFirst", "xOffsetMainFirst",
+    "fontSizeMainRest", "skewMainRest", "xOffsetMainRest",
+    "fontSizeSecondary", "skewSecondary", "xOffsetSecondary",
+    "fontSizeTagline", "taglineOffset", "skewTagline"
   ],
 };
 
@@ -53,11 +66,10 @@ export const generateLogoModification = async (
     
     Instructions:
     1. Update the logo configuration JSON based on the user's request.
-    2. Keep values that are not mentioned unchanged.
-    3. "fontFamily" should be a valid CSS font-family string.
-    4. "gapSize" is the spacing between the main name and the secondary symbol (default ~20).
-    5. "letterSpacingMain" and "letterSpacingTagline" are in em units (e.g. 0.1, -0.05).
-    6. Ensure colors are valid hex codes.
+    2. "skew..." values are in degrees (e.g. -12 for italic/right lean).
+    3. "xOffset..." values determine horizontal position relative to center.
+    4. "fontSize..." determines size.
+    5. Keep the "Dimo V" structure unless asked to change text.
     `,
     config: {
       responseMimeType: "application/json",
@@ -90,10 +102,9 @@ export const generateLogoVariations = async (
     User Request: "${userPrompt}".
     
     Instructions:
-    1. Generate exactly ${count} DISTINCT variations of the logo configuration based on the request.
-    2. If the user asks for "lighter" or "darker", adjust colors accordingly.
-    3. Vary the fonts, spacing, and colors slightly between variations to give options.
-    4. Keep the text content (Dimo, V, Construction) unless explicitly asked to change.
+    1. Generate exactly ${count} DISTINCT variations.
+    2. Vary the fonts, offsets, skews, and sizes to create different layouts.
+    3. Ensure "xOffset" values are adjusted if "fontSize" changes to prevent overlapping.
     `,
     config: {
       responseMimeType: "application/json",
@@ -114,7 +125,6 @@ export const generateLogoVariations = async (
     if (parsed.variations && Array.isArray(parsed.variations)) {
         return parsed.variations as LogoConfig[];
     }
-    // Fallback if model returns raw array despite schema
     if (Array.isArray(parsed)) {
         return parsed as LogoConfig[];
     }

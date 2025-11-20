@@ -21,20 +21,44 @@ export const LogoRenderer = forwardRef<SVGSVGElement, LogoRendererProps>(
       colorTagline,
       bgColor,
       fontFamily,
-      letterSpacingMain,
+      
+      // First Letter
+      fontSizeMainFirst,
+      skewMainFirst,
+      xOffsetMainFirst,
+
+      // Rest of Name
+      fontSizeMainRest,
+      skewMainRest,
+      xOffsetMainRest,
+      letterSpacingMainRest,
+
+      // Symbol
+      fontSizeSecondary,
+      skewSecondary,
+      xOffsetSecondary,
+
+      // Tagline
+      fontSizeTagline,
+      taglineOffset,
       letterSpacingTagline,
-      gapSize,
+      skewTagline,
     } = config;
 
-    // Calculations for layout
+    // Layout Calculations
     const viewBoxWidth = 400;
     const viewBoxHeight = 200;
     const centerX = viewBoxWidth / 2;
     const centerY = viewBoxHeight / 2;
 
-    // Split main text for dual coloring
     const mainFirstChar = textMain.charAt(0);
     const mainRest = textMain.slice(1);
+
+    // Helper for transform strings
+    const getTransform = (x: number, skew: number) => {
+        // Translate X, Center Y (approx), then Skew
+        return `translate(${x}, 0) skewX(${skew})`;
+    };
 
     return (
       <svg
@@ -50,43 +74,59 @@ export const LogoRenderer = forwardRef<SVGSVGElement, LogoRendererProps>(
         {/* Background */}
         <rect width="100%" height="100%" fill={bgColor} />
 
-        {/* Main Logo Group */}
+        {/* Main Logo Group (Centered at viewport center) */}
         <g transform={`translate(${centerX}, ${centerY - 15})`}>
+          
+          {/* 1. First Letter (D) */}
           <text
-            x="0"
-            y="0"
+            transform={getTransform(xOffsetMainFirst, skewMainFirst)}
+            fill={colorMain}
             fontFamily={fontFamily}
-            fontWeight="900" // Extra bold
-            fontSize="85"
+            fontWeight="900"
+            fontSize={fontSizeMainFirst}
             textAnchor="middle"
             dominantBaseline="middle"
-            letterSpacing={`${letterSpacingMain}em`}
           >
-            {/* The First Letter (e.g. D) */}
-            <tspan fill={colorMain}>{mainFirstChar}</tspan>
-            
-            {/* The Rest (e.g. imo) */}
-            <tspan fill={colorMainRest}>{mainRest}</tspan>
-            
-            {/* Spacing between Dimo and V controlled by gapSize dx */}
-            <tspan dx={gapSize}> </tspan>
+            {mainFirstChar}
+          </text>
 
-            {/* The V - Italicized */}
-            <tspan 
-              fill={colorSecondary} 
-              fontStyle="italic"
-            >{textSecondary}</tspan>
+          {/* 2. Rest of Name (imo) */}
+          <text
+            transform={getTransform(xOffsetMainRest, skewMainRest)}
+            fill={colorMainRest}
+            fontFamily={fontFamily}
+            fontWeight="900"
+            fontSize={fontSizeMainRest}
+            textAnchor="middle"
+            dominantBaseline="middle"
+            letterSpacing={`${letterSpacingMainRest}em`}
+          >
+            {mainRest}
+          </text>
+
+          {/* 3. Symbol (V) */}
+          <text
+             transform={getTransform(xOffsetSecondary, skewSecondary)}
+             fill={colorSecondary}
+             fontFamily={fontFamily}
+             fontWeight="900"
+             fontSize={fontSizeSecondary}
+             textAnchor="middle"
+             dominantBaseline="middle"
+          >
+            {textSecondary}
           </text>
         </g>
 
         {/* Tagline */}
         <text
           x={centerX}
-          y={centerY + 45}
+          y={centerY + taglineOffset}
+          transform={`rotate(0 ${centerX} ${centerY + taglineOffset}) skewX(${skewTagline})`}
           fill={colorTagline}
           fontFamily={fontFamily}
           fontWeight="bold"
-          fontSize="20"
+          fontSize={fontSizeTagline}
           letterSpacing={`${letterSpacingTagline}em`}
           textAnchor="middle"
           dominantBaseline="middle"
