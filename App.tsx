@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useCallback } from 'react';
-import { Download, RefreshCw, Wand2, Palette, Type, Settings2, Layout, Grid, ArrowRight, Sun, Moon } from 'lucide-react';
+import { Download, RefreshCw, Wand2, Palette, Type, Settings2, Layout, Grid, ArrowRight, Sun, Moon, FileCode } from 'lucide-react';
 import { DEFAULT_LOGO_CONFIG, DEFAULT_LIGHT_COLORS, FONT_OPTIONS } from './constants';
 import { LogoConfig, LogoColorConfig, DownloadFormat } from './types';
 import { LogoRenderer } from './components/LogoRenderer';
@@ -68,6 +68,16 @@ export default function App() {
         document.body.removeChild(link);
       };
       img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+    } else if (format === DownloadFormat.TXT) {
+      const svgData = new XMLSerializer().serializeToString(svgElement);
+      const blob = new Blob([svgData], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${currentConfig.textMain}_${currentConfig.textSecondary}${suffix}_code.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   }, [config, lightConfig]);
 
@@ -149,6 +159,7 @@ export default function App() {
               <div className="flex gap-2 justify-center">
                 <button onClick={() => handleDownload(DownloadFormat.PNG, 'dark')} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 py-2 rounded-lg text-xs font-medium border border-gray-700 flex items-center justify-center gap-2"><Download size={14} /> PNG</button>
                 <button onClick={() => handleDownload(DownloadFormat.SVG, 'dark')} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 py-2 rounded-lg text-xs font-medium border border-gray-700 flex items-center justify-center gap-2"><Download size={14} /> SVG</button>
+                <button onClick={() => handleDownload(DownloadFormat.TXT, 'dark')} className="flex-1 bg-gray-800 hover:bg-gray-700 text-gray-200 py-2 rounded-lg text-xs font-medium border border-gray-700 flex items-center justify-center gap-2"><FileCode size={14} /> Code</button>
               </div>
             </div>
 
@@ -165,6 +176,7 @@ export default function App() {
                <div className="flex gap-2 justify-center">
                 <button onClick={() => handleDownload(DownloadFormat.PNG, 'light')} className="flex-1 bg-gray-100 hover:bg-white text-gray-800 py-2 rounded-lg text-xs font-medium border border-gray-300 flex items-center justify-center gap-2"><Download size={14} /> PNG</button>
                 <button onClick={() => handleDownload(DownloadFormat.SVG, 'light')} className="flex-1 bg-gray-100 hover:bg-white text-gray-800 py-2 rounded-lg text-xs font-medium border border-gray-300 flex items-center justify-center gap-2"><Download size={14} /> SVG</button>
+                <button onClick={() => handleDownload(DownloadFormat.TXT, 'light')} className="flex-1 bg-gray-100 hover:bg-white text-gray-800 py-2 rounded-lg text-xs font-medium border border-gray-300 flex items-center justify-center gap-2"><FileCode size={14} /> Code</button>
               </div>
             </div>
           </div>

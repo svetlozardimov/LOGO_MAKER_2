@@ -39,4 +39,5 @@ export interface LogoConfig extends LogoColorConfig {
 export enum DownloadFormat {
   SVG = 'SVG',
   PNG = 'PNG',
+  TXT = 'TXT',
 }
